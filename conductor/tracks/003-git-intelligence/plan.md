@@ -11,3 +11,6 @@
     - Update `ProjectCard` to display "Last Commit: [Date]".
     - Add a "Stale" badge to projects with no activity in 90+ days.
     - Add a filter/sort option for "Stale First".
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions cb92cd8
