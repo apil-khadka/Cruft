@@ -8,10 +8,3 @@
 - **Description:** Implement high-performance Rust scanner with live IPC streaming.
 
 ---
-
-## [x] Track: Global Cache Analyzer
-- **ID:** `004-global-caches`
-- **Link:** [./tracks/004-global-caches/](./tracks/004-global-caches/)
-- **Description:** Identify and prune system-wide developer caches (Cargo, npm, Docker).
-
----
