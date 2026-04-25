@@ -10,4 +10,4 @@
 - **Framework:** Tauri 2.0
 - **File Traversal:** `jwalk` for parallelized, high-performance file system scanning.
 - **Communication:** Tauri 2.0 `tauri::ipc::Channel` for streaming scan results.
-- Native Integration: tauri-plugin-dialog for native file pickers, trash crate for safe deletion, and git2 for Git metadata.
+- Native Integration: tauri-plugin-dialog for native file pickers, trash crate for safe deletion, git2 for Git metadata, and dirs crate for cross-platform path resolution.

@@ -5,6 +5,7 @@ A "Deep Clean" utility for developers to identify and safely remove heavy, ephem
 
 ## Core Features
 - Recursive, parallelized directory traversal (via jwalk) to find recognized heavy dependency folders.
+- System-wide Cache Analyzer: Identify and prune massive developer caches (Cargo, npm, Docker) that are not project-specific.
 - Clean, modern desktop UI displaying projects with risk-level color coding.
 - Git Intelligence: Detect stale projects, missing remotes, and unpushed changes to ensure safe cleanup.
 - Safe, bulk deletion of target directories with system Trash/Recycle Bin integration.
