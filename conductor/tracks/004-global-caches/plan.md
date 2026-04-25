@@ -10,3 +10,6 @@
 - [x] **Task 4: Cache UI View**
     - Create a new view or tab in the frontend for "System Caches".
     - Implement specialized "One-click Prune" buttons.
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 3cd1483
