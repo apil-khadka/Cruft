@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "project-analyzer",
-        "width": 800,
-        "height": 600
+        "label": "main",
+        "title": "Project Analyzer",
+        "width": 1000,
+        "height": 700,
+        "decorations": false
       }
     ],
     "security": {

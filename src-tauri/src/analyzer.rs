@@ -1,4 +1,3 @@
-use jwalk::WalkDirGeneric;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,8 +25,6 @@ pub const TARGETS: &[&str] = &[
     ".nuxt",
 ];
 
-/// Recursively calculates the size of a directory.
-/// Note: For high performance in scanning, we might defer this or run it in parallel.
 pub fn calculate_dir_size(path: &Path) -> u64 {
     WalkDir::new(path)
         .into_iter()
@@ -59,57 +56,73 @@ pub fn get_last_modified(path: &Path) -> u64 {
 
 #[tauri::command]
 pub async fn start_scan(path: String, on_event: tauri::ipc::Channel<ProjectInfo>) -> Result<(), String> {
+    println!("Starting scan at: {}", path);
     let root = PathBuf::from(path);
 
     if !root.exists() {
         return Err("Path does not exist".to_string());
     }
 
-    // Spawn a standard thread for the heavy parallel walk
     std::thread::spawn(move || {
-        WalkDirGeneric::<((), bool)>::new(&root)
-            .parallelism(jwalk::Parallelism::RayonDefaultPool { 
-                busy_timeout: std::time::Duration::from_millis(10) 
-            })
-            .process_read_dir(|_, _, _, children| {
-                // Skip hidden directories but keep recognized targets
-                children.retain(|dir_entry_result| {
-                    dir_entry_result
-                        .as_ref()
-                        .map(|e| {
-                            let name = e.file_name.to_string_lossy();
-                            !name.starts_with('.') || TARGETS.contains(&name.as_ref())
-                        })
-                        .unwrap_or(false)
-                });
-            })
-            .into_iter()
-            .filter_map(|e| e.ok())
-            .filter(|e| e.file_type.is_dir())
-            .for_each(|entry| {
-                let name = entry.file_name.to_string_lossy();
-                if TARGETS.contains(&name.as_ref()) {
-                    let target_path = entry.path();
-                    let parent = target_path.parent().unwrap_or(&target_path);
+        println!("Scanner thread started");
+        
+        // Use follow_links(true) to handle Windows junctions/symlinks
+        let mut it = WalkDir::new(&root)
+            .follow_links(true)
+            .into_iter();
 
-                    let info = ProjectInfo {
-                        name: parent
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .to_string(),
-                        path: parent.to_string_lossy().to_string(),
-                        target_dir: target_path.to_string_lossy().to_string(),
-                        size: calculate_dir_size(&target_path),
-                        project_type: get_project_type(&name),
-                        last_modified: get_last_modified(&target_path),
-                    };
+        loop {
+            let entry = match it.next() {
+                None => {
+                    println!("Scan finished: No more entries");
+                    break;
+                },
+                Some(Ok(entry)) => entry,
+                Some(Err(e)) => {
+                    println!("Scan error at {:?}: {}", e.path(), e);
+                    continue;
+                },
+            };
 
-                    let _ = on_event.send(info);
+            let path = entry.path();
+            let file_name = entry.file_name().to_string_lossy();
+            let depth = entry.depth();
+
+            // Check if this is a target directory
+            if entry.file_type().is_dir() && TARGETS.contains(&file_name.as_ref()) {
+                println!("[MATCH] Found target: {}", path.display());
+                let parent = path.parent().unwrap_or(path);
+
+                let info = ProjectInfo {
+                    name: parent
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .to_string(),
+                    path: parent.to_string_lossy().to_string(),
+                    target_dir: path.to_string_lossy().to_string(),
+                    size: calculate_dir_size(path),
+                    project_type: get_project_type(&file_name),
+                    last_modified: get_last_modified(path),
+                };
+
+                if let Err(e) = on_event.send(info) {
+                    println!("Failed to send project info via channel: {}", e);
+                    break;
                 }
-            });
+                
+                it.skip_current_dir();
+                continue;
+            }
+
+            // Only skip HIDDEN DIRECTORIES. Don't skip hidden files like .env
+            if entry.file_type().is_dir() && depth > 0 && file_name.starts_with('.') && !TARGETS.contains(&file_name.as_ref()) {
+                println!("[SKIP] Skipping hidden folder: {}", path.display());
+                it.skip_current_dir();
+                continue;
+            }
+        }
     });
 
     Ok(())
 }
-
