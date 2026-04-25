@@ -1,4 +1,5 @@
 pub mod analyzer;
+pub mod global_cache;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -8,7 +9,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             analyzer::start_scan,
             analyzer::delete_target,
-            analyzer::reveal_in_explorer
+            analyzer::reveal_in_explorer,
+            global_cache::scan_global_caches,
+            global_cache::prune_global_cache
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

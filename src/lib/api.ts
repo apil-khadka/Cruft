@@ -11,6 +11,13 @@ export interface ProjectInfo {
   is_stale: boolean;
 }
 
+export interface GlobalCacheInfo {
+  name: string;
+  path: string;
+  size: number;
+  ecosystem: string;
+}
+
 export function formatBytes(bytes: number, decimals = 2) {
   if (!+bytes) return "0 Bytes";
   const k = 1024;

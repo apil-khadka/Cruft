@@ -30,4 +30,5 @@ tauri-plugin-dialog = "2.7.0"
 trash = "5.2"
 git2 = "0.19"
 chrono = "0.4"
+dirs = "5.0"
 

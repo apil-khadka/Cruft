@@ -9,7 +9,7 @@
 
 ---
 
-## [ ] Track: Global Cache Analyzer
+## [~] Track: Global Cache Analyzer
 - **ID:** `004-global-caches`
 - **Link:** [./tracks/004-global-caches/](./tracks/004-global-caches/)
 - **Description:** Identify and prune system-wide developer caches (Cargo, npm, Docker).

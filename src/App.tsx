@@ -1,20 +1,70 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { invoke, Channel } from "@tauri-apps/api/core";
 import { open, ask } from "@tauri-apps/plugin-dialog";
 import { WindowControls } from "tauri-controls";
-import { FolderSearch, Trash2, RefreshCcw, ShieldCheck, CheckSquare, Square } from "lucide-react";
-import { ProjectInfo, formatBytes } from "./lib/api";
+import { FolderSearch, Trash2, RefreshCcw, ShieldCheck, CheckSquare, Square, HardDrive, LayoutGrid } from "lucide-react";
+import { ProjectInfo, GlobalCacheInfo, formatBytes } from "./lib/api";
 import { ProjectCard } from "./components/ProjectCard";
+import { SystemCacheCard } from "./components/SystemCacheCard";
 import "./App.css";
 
 type SortMode = "size" | "activity" | "stale";
+type Tab = "projects" | "caches";
 
 function App() {
+  const [activeTab, setActiveTab] = useState<Tab>("projects");
   const [projects, setProjects] = useState<ProjectInfo[]>([]);
+  const [globalCaches, setGlobalCaches] = useState<GlobalCacheInfo[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  const [isScanningCaches, setIsScanningCaches] = useState(false);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [isCleaning, setIsCleaning] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("size");
+
+  useEffect(() => {
+    if (activeTab === "caches") {
+      scanCaches();
+    }
+  }, [activeTab]);
+
+  const scanCaches = async () => {
+    setIsScanningCaches(true);
+    try {
+      const results = await invoke<GlobalCacheInfo[]>("scan_global_caches");
+      setGlobalCaches(results);
+    } catch (err) {
+      console.error("Failed to scan global caches:", err);
+    } finally {
+      setIsScanningCaches(false);
+    }
+  };
+
+  const pruneCache = async (path: string) => {
+    const cache = globalCaches.find(c => c.path === path);
+    if (!cache) return;
+
+    const confirmed = await ask(
+      `Are you sure you want to prune the ${cache.name}? This will remove ${formatBytes(cache.size)} of cached data.`,
+      { 
+        title: "Prune Global Cache",
+        kind: "warning",
+        okLabel: "Prune Cache",
+        cancelLabel: "Cancel"
+      }
+    );
+
+    if (confirmed) {
+      setIsCleaning(true);
+      try {
+        await invoke("prune_global_cache", { path });
+        await scanCaches(); // Refresh
+      } catch (err) {
+        console.error(`Failed to prune cache ${path}:`, err);
+      } finally {
+        setIsCleaning(false);
+      }
+    }
+  };
 
   const sortedProjects = useMemo(() => {
     const list = [...projects];
@@ -134,34 +184,77 @@ function App() {
         <WindowControls />
       </div>
 
+      {/* Tabs */}
+      <div className="px-6 bg-white border-b border-gray-200">
+        <div className="max-w-5xl mx-auto flex gap-8">
+          <button 
+            onClick={() => setActiveTab("projects")}
+            className={`py-4 text-sm font-bold border-b-2 transition-all ${activeTab === "projects" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+          >
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4" />
+              Project Targets
+            </div>
+          </button>
+          <button 
+            onClick={() => setActiveTab("caches")}
+            className={`py-4 text-sm font-bold border-b-2 transition-all ${activeTab === "caches" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+          >
+            <div className="flex items-center gap-2">
+              <HardDrive className="w-4 h-4" />
+              System Caches
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Header / Stats */}
       <div className="p-6 bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Space Saver</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+              {activeTab === "projects" ? "Space Saver" : "System Health"}
+            </h1>
             <p className="text-sm text-gray-500 mt-1">
-              Identify and remove heavy `node_modules`, `target`, and `vendor` folders.
+              {activeTab === "projects" 
+                ? "Identify and remove heavy `node_modules`, `target`, and `vendor` folders."
+                : "Manage massive system-wide developer caches from Rust, Node, and more."}
             </p>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Potential Savings</p>
-              <p className="text-2xl font-black text-blue-600 tracking-tight">{formatBytes(totalSize)}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                {activeTab === "projects" ? "Potential Savings" : "Cache Usage"}
+              </p>
+              <p className="text-2xl font-black text-blue-600 tracking-tight">
+                {formatBytes(activeTab === "projects" ? totalSize : globalCaches.reduce((acc, c) => acc + c.size, 0))}
+              </p>
             </div>
-            <button
-              onClick={startScan}
-              disabled={isScanning || isCleaning}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 shadow-blue-100"
-            >
-              {isScanning ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FolderSearch className="w-4 h-4" />}
-              {isScanning ? "Scanning..." : "Scan Directory"}
-            </button>
+            {activeTab === "projects" ? (
+              <button
+                onClick={startScan}
+                disabled={isScanning || isCleaning}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 shadow-blue-100"
+              >
+                {isScanning ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FolderSearch className="w-4 h-4" />}
+                {isScanning ? "Scanning..." : "Scan Directory"}
+              </button>
+            ) : (
+              <button
+                onClick={scanCaches}
+                disabled={isScanningCaches || isCleaning}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 shadow-blue-100"
+              >
+                <RefreshCcw className={`w-4 h-4 ${isScanningCaches ? "animate-spin" : ""}`} />
+                Refresh Caches
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Toolbar */}
-      {projects.length > 0 && (
+      {activeTab === "projects" && projects.length > 0 && (
         <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -199,36 +292,55 @@ function App() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
         <div className="max-w-5xl mx-auto">
-          {projects.length === 0 && !isScanning ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400">
-              <div className="w-20 h-20 bg-white border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center mb-6">
-                <FolderSearch className="w-10 h-10 text-gray-200" />
+          {activeTab === "projects" ? (
+            projects.length === 0 && !isScanning ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400">
+                <div className="w-20 h-20 bg-white border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center mb-6">
+                  <FolderSearch className="w-10 h-10 text-gray-200" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Ready to analyze</h3>
+                <p className="text-gray-500 max-w-xs mt-2 leading-relaxed">
+                  Select your development folder to find space-hogging dependency directories.
+                </p>
+                <button 
+                  onClick={startScan}
+                  className="mt-8 text-blue-600 font-bold hover:underline underline-offset-4"
+                >
+                  Choose a folder to scan →
+                </button>
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Ready to analyze</h3>
-              <p className="text-gray-500 max-w-xs mt-2 leading-relaxed">
-                Select your development folder to find space-hogging dependency directories.
-              </p>
-              <button 
-                onClick={startScan}
-                className="mt-8 text-blue-600 font-bold hover:underline underline-offset-4"
-              >
-                Choose a folder to scan →
-              </button>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                {sortedProjects.map((p) => (
+                  <ProjectCard
+                    key={p.target_dir}
+                    project={p}
+                    isSelected={selectedPaths.has(p.target_dir)}
+                    onToggleSelect={toggleSelect}
+                  />
+                ))}
+                {isScanning && (
+                  <div className="p-4 rounded-xl border border-dashed border-gray-300 flex items-center justify-center bg-white/50 animate-pulse h-[100px]">
+                    <RefreshCcw className="w-5 h-5 text-gray-400 animate-spin mr-3" />
+                    <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Searching...</span>
+                  </div>
+                )}
+              </div>
+            )
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-              {sortedProjects.map((p) => (
-                <ProjectCard
-                  key={p.target_dir}
-                  project={p}
-                  isSelected={selectedPaths.has(p.target_dir)}
-                  onToggleSelect={toggleSelect}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {globalCaches.map((cache) => (
+                <SystemCacheCard
+                  key={cache.path}
+                  cache={cache}
+                  onPrune={pruneCache}
+                  isPruning={isCleaning}
                 />
               ))}
-              {isScanning && (
-                <div className="p-4 rounded-xl border border-dashed border-gray-300 flex items-center justify-center bg-white/50 animate-pulse h-[100px]">
-                  <RefreshCcw className="w-5 h-5 text-gray-400 animate-spin mr-3" />
-                  <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Searching...</span>
+              {isScanningCaches && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-400">
+                   <RefreshCcw className="w-10 h-10 animate-spin mb-4" />
+                   <p className="font-bold uppercase tracking-widest text-xs">Analyzing System Caches...</p>
                 </div>
               )}
             </div>
@@ -237,7 +349,7 @@ function App() {
       </div>
 
       {/* Action Bar */}
-      {selectedPaths.size > 0 && (
+      {activeTab === "projects" && selectedPaths.size > 0 && (
         <div className="p-5 bg-white border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-6">
