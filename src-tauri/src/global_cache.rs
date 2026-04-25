@@ -63,7 +63,7 @@ pub async fn prune_global_cache(path: String) -> Result<(), String> {
         // Moving to trash is safer than permanent deletion.
         match trash::delete(&path_buf) {
             Ok(_) => Ok(()),
-            Err(e) => {
+            Err(_) => {
                 // Fallback to permanent deletion if trash fails
                 std::fs::remove_dir_all(&path_buf).map_err(|e| e.to_string())
             }
@@ -143,18 +143,18 @@ fn parse_docker_size(s: &str) -> u64 {
     let s = s.trim().to_uppercase();
     if s == "0B" || s.is_empty() { return 0; }
     
-    // Check for unit at the end
-    let (num_part, unit) = if s.ends_with("GB") {
-        (&s[..s.len()-2], 1024 * 1024 * 1024)
-    } else if s.ends_with("MB") {
-        (&s[..s.len()-2], 1024 * 1024)
-    } else if s.ends_with("KB") {
-        (&s[..s.len()-2], 1024)
-    } else if s.ends_with("B") {
-        (&s[..s.len()-1], 1)
-    } else {
-        ("0", 0)
+    // Find where the number ends and unit begins
+    let unit_start = s.find(|c: char| c.is_alphabetic()).unwrap_or(s.len());
+    let (num_part, unit_part) = s.split_at(unit_start);
+    
+    let num = num_part.parse::<f64>().unwrap_or(0.0);
+    
+    let multiplier = match unit_part {
+        "GB" | "G" => 1024 * 1024 * 1024,
+        "MB" | "M" => 1024 * 1024,
+        "KB" | "K" => 1024,
+        _ => 1,
     };
 
-    (num_part.parse::<f64>().unwrap_or(0.0) * (unit as f64)) as u64
+    (num * multiplier as f64) as u64
 }
