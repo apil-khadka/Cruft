@@ -126,3 +126,98 @@ pub async fn start_scan(path: String, on_event: tauri::ipc::Channel<ProjectInfo>
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn delete_target(path: String) -> Result<(), String> {
+    let path_buf = PathBuf::from(&path);
+    
+    // Safety check: ensure the folder name is in our TARGETS list
+    let folder_name = path_buf.file_name()
+        .ok_or("Invalid path")?
+        .to_string_lossy();
+        
+    if !TARGETS.contains(&folder_name.as_ref()) {
+        return Err(format!("Safety block: Cannot delete non-target folder '{}'", folder_name));
+    }
+
+    if path_buf.exists() && path_buf.is_dir() {
+        // Try to move to trash first
+        match trash::delete(&path_buf) {
+            Ok(_) => {
+                println!("[TRASH] Successfully moved to trash: {}", path);
+                Ok(())
+            }
+            Err(e) => {
+                println!("[TRASH ERROR] Failed to move to trash: {}. Falling back to permanent delete.", e);
+                // Fallback to permanent deletion if trash fails (common on some Linux setups)
+                fs::remove_dir_all(&path_buf).map_err(|e| e.to_string())?;
+                println!("[DELETE] Successfully removed permanently: {}", path);
+                Ok(())
+            }
+        }
+    } else {
+        Err("Path does not exist or is not a directory".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn reveal_in_explorer(path: String) -> Result<(), String> {
+    let path_buf = PathBuf::from(path);
+    if !path_buf.exists() {
+        return Err("Path does not exist".to_string());
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg("/select,")
+            .arg(path_buf)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("-R")
+            .arg(path_buf)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, xdg-open doesn't have a direct "select" equivalent in standard,
+        // so we just open the parent directory.
+        let parent = path_buf.parent().unwrap_or(&path_buf);
+        std::process::Command::new("xdg-open")
+            .arg(parent)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_in_vscode(path: String) -> Result<(), String> {
+    let path_buf = PathBuf::from(path);
+    if !path_buf.exists() {
+        return Err("Path does not exist".to_string());
+    }
+
+    let path_str = path_buf.to_string_lossy().to_string();
+    let (cmd, args): (&str, Vec<String>) = if cfg!(target_os = "windows") {
+        ("cmd", vec!["/C".to_string(), "code".to_string(), path_str])
+    } else {
+        ("code", vec![path_str])
+    };
+
+    std::process::Command::new(cmd)
+        .args(args)
+        .spawn()
+        .map_err(|e| format!("Failed to open VS Code: {}. Make sure 'code' is in your PATH.", e))?;
+
+    Ok(())
+}
+

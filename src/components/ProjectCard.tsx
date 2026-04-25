@@ -1,6 +1,7 @@
 import React from "react";
 import { ProjectInfo, formatBytes } from "../lib/api";
-import { Trash2, FolderOpen, Box, Hash, Terminal } from "lucide-react";
+import { Trash2, FolderOpen, Box, Hash, Terminal, ExternalLink, Code } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
 interface ProjectCardProps {
   project: ProjectInfo;
@@ -33,12 +34,31 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     }
   };
 
+  const reveal = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await invoke("reveal_in_explorer", { path: project.target_dir });
+    } catch (err) {
+      console.error("Failed to reveal:", err);
+    }
+  };
+
+  const openInVSCode = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await invoke("open_in_vscode", { path: project.path });
+    } catch (err) {
+      console.error("Failed to open in VS Code:", err);
+    }
+  };
+
   return (
     <div
-      className={`p-4 rounded-xl border transition-all ${
+      onClick={() => onToggleSelect(project.target_dir)}
+      className={`p-4 rounded-xl border transition-all cursor-pointer select-none group ${
         isSelected
-          ? "border-blue-500 bg-blue-50/10"
-          : "border-gray-200 bg-white hover:shadow-md"
+          ? "border-blue-500 bg-blue-50/20 shadow-sm"
+          : "border-gray-200 bg-white hover:shadow-md hover:border-gray-300"
       }`}
     >
       <div className="flex items-start justify-between">
@@ -47,15 +67,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             type="checkbox"
             className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             checked={isSelected}
-            onChange={() => onToggleSelect(project.target_dir)}
+            readOnly
           />
-          <div className="p-2 bg-gray-50 rounded-lg">{getIcon()}</div>
+          <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+            {getIcon()}
+          </div>
           <div className="overflow-hidden">
             <h3 className="font-semibold text-gray-900 truncate">
               {project.name}
             </h3>
             <p
-              className="text-xs text-gray-500 truncate max-w-[200px]"
+              className="text-xs text-gray-500 truncate max-w-[180px]"
               title={project.path}
             >
               {project.path}
@@ -75,11 +97,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
           {project.project_type}
         </span>
-        <span className="text-xs text-gray-500 flex items-center gap-1">
-          <Trash2 className="w-3 h-3" />{" "}
-          {project.target_dir.split("/").pop() ||
-            project.target_dir.split("\\").pop()}
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={openInVSCode}
+            className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors"
+            title="Open project in VS Code"
+          >
+            <Code className="w-3 h-3" />
+            VS Code
+          </button>
+          <button
+            onClick={reveal}
+            className="text-xs text-gray-400 hover:text-blue-600 flex items-center gap-1 transition-colors"
+            title="Reveal in Explorer"
+          >
+            <ExternalLink className="w-3 h-3" />
+            Reveal
+          </button>
+          <span className="text-xs text-gray-500 flex items-center gap-1">
+            <Trash2 className="w-3 h-3" />{" "}
+            {project.target_dir.split("/").pop() ||
+              project.target_dir.split("\\").pop()}
+          </span>
+        </div>
       </div>
     </div>
   );

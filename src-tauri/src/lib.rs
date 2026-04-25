@@ -5,7 +5,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![analyzer::start_scan])
+        .invoke_handler(tauri::generate_handler![
+            analyzer::start_scan,
+            analyzer::delete_target,
+            analyzer::reveal_in_explorer
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
