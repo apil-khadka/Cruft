@@ -9,7 +9,7 @@
 
 ---
 
-## [ ] Track: Git Intelligence
+## [x] Track: Git Intelligence
 - **ID:** `003-git-intelligence`
 - **Link:** [./tracks/003-git-intelligence/](./tracks/003-git-intelligence/)
 - **Description:** Detect stale projects using last Git commit metadata.

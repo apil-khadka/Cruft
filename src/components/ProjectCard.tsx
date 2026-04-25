@@ -1,6 +1,9 @@
 import React from "react";
 import { ProjectInfo, formatBytes } from "../lib/api";
-import { Trash2, FolderOpen, Box, Hash, Terminal, ExternalLink, Code } from "lucide-react";
+import { 
+  Trash2, FolderOpen, Box, Hash, Terminal, 
+  ExternalLink, Code, Clock, CloudOff, AlertCircle 
+} from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
 interface ProjectCardProps {
@@ -55,7 +58,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <div
       onClick={() => onToggleSelect(project.target_dir)}
-      className={`p-4 rounded-xl border transition-all cursor-pointer select-none group ${
+      className={`p-4 rounded-xl border transition-all cursor-pointer select-none group flex flex-col gap-3 ${
         isSelected
           ? "border-blue-500 bg-blue-50/20 shadow-sm"
           : "border-gray-200 bg-white hover:shadow-md hover:border-gray-300"
@@ -75,6 +78,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           <div className="overflow-hidden">
             <h3 className="font-semibold text-gray-900 truncate">
               {project.name}
+              {project.is_stale && (
+                <span className="ml-2 px-1.5 py-0.5 text-[10px] font-black bg-amber-100 text-amber-700 rounded uppercase tracking-wider">
+                  Stale
+                </span>
+              )}
             </h3>
             <p
               className="text-xs text-gray-500 truncate max-w-[180px]"
@@ -88,12 +96,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           <span className={`text-lg font-bold ${sizeColor}`}>
             {formatBytes(project.size)}
           </span>
-          <p className="text-xs text-gray-400 mt-1">
-            {new Date(project.last_modified * 1000).toLocaleDateString()}
-          </p>
+          {project.last_commit ? (
+            <p className="text-[10px] text-gray-400 mt-1 flex items-center justify-end gap-1">
+              <Clock className="w-3 h-3" />
+              {new Date(project.last_commit * 1000).toLocaleDateString()}
+            </p>
+          ) : (
+            <p className="text-[10px] text-gray-400 mt-1">
+              {new Date(project.last_modified * 1000).toLocaleDateString()}
+            </p>
+          )}
         </div>
       </div>
-      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+
+      {/* Git Status Bar */}
+      {(project.has_unpushed_changes || !project.has_remote) && (
+        <div className="flex flex-wrap gap-2">
+          {!project.has_remote && (
+            <div className="flex items-center gap-1 text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+              <CloudOff className="w-3 h-3" />
+              NO REMOTE
+            </div>
+          )}
+          {project.has_unpushed_changes && (
+            <div className="flex items-center gap-1 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+              <AlertCircle className="w-3 h-3" />
+              UNPUSHED CHANGES
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="mt-auto pt-3 border-t border-gray-100 flex justify-between items-center">
         <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
           {project.project_type}
         </span>

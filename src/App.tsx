@@ -7,11 +7,31 @@ import { ProjectInfo, formatBytes } from "./lib/api";
 import { ProjectCard } from "./components/ProjectCard";
 import "./App.css";
 
+type SortMode = "size" | "activity" | "stale";
+
 function App() {
   const [projects, setProjects] = useState<ProjectInfo[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [isCleaning, setIsCleaning] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>("size");
+
+  const sortedProjects = useMemo(() => {
+    const list = [...projects];
+    switch (sortMode) {
+      case "size":
+        return list.sort((a, b) => b.size - a.size);
+      case "activity":
+        return list.sort((a, b) => (b.last_commit || 0) - (a.last_commit || 0));
+      case "stale":
+        return list.sort((a, b) => {
+          if (a.is_stale === b.is_stale) return b.size - a.size;
+          return a.is_stale ? -1 : 1;
+        });
+      default:
+        return list;
+    }
+  }, [projects, sortMode]);
 
   const totalSize = useMemo(() => {
     return projects.reduce((acc, p) => acc + p.size, 0);
@@ -118,20 +138,20 @@ function App() {
       <div className="p-6 bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Space Saver</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Space Saver</h1>
             <p className="text-sm text-gray-500 mt-1">
               Identify and remove heavy `node_modules`, `target`, and `vendor` folders.
             </p>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Potential Savings</p>
-              <p className="text-xl font-black text-blue-600">{formatBytes(totalSize)}</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Potential Savings</p>
+              <p className="text-2xl font-black text-blue-600 tracking-tight">{formatBytes(totalSize)}</p>
             </div>
             <button
               onClick={startScan}
               disabled={isScanning || isCleaning}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 shadow-blue-100"
             >
               {isScanning ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FolderSearch className="w-4 h-4" />}
               {isScanning ? "Scanning..." : "Scan Directory"}
@@ -144,15 +164,33 @@ function App() {
       {projects.length > 0 && (
         <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
           <div className="max-w-5xl mx-auto flex items-center justify-between">
-            <button 
-              onClick={toggleSelectAll}
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              {selectedPaths.size === projects.length ? <CheckSquare className="w-4 h-4 text-blue-600" /> : <Square className="w-4 h-4" />}
-              {selectedPaths.size === projects.length ? "Deselect All" : "Select All Projects"}
-            </button>
-            <span className="text-xs text-gray-400 font-medium italic">
-              Found {projects.length} projects with heavy dependencies
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={toggleSelectAll}
+                className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                {selectedPaths.size === projects.length ? <CheckSquare className="w-4 h-4 text-blue-600" /> : <Square className="w-4 h-4" />}
+                {selectedPaths.size === projects.length ? "Deselect All" : "Select All"}
+              </button>
+              
+              <div className="h-4 w-px bg-gray-300" />
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sort by:</span>
+                <select 
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as SortMode)}
+                  className="bg-transparent text-sm font-bold text-gray-600 focus:outline-none cursor-pointer hover:text-blue-600 transition-colors"
+                >
+                  <option value="size">Largest First</option>
+                  <option value="activity">Recent Activity</option>
+                  <option value="stale">Stale Projects First</option>
+                </select>
+              </div>
+            </div>
+            
+            <span className="text-xs text-gray-400 font-bold italic">
+              Found {projects.length} targets
             </span>
           </div>
         </div>
@@ -162,9 +200,9 @@ function App() {
       <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
         <div className="max-w-5xl mx-auto">
           {projects.length === 0 && !isScanning ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-                <FolderSearch className="w-10 h-10 text-blue-200" />
+            <div className="flex flex-col items-center justify-center py-20 text-center text-gray-400">
+              <div className="w-20 h-20 bg-white border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center mb-6">
+                <FolderSearch className="w-10 h-10 text-gray-200" />
               </div>
               <h3 className="text-xl font-bold text-gray-900">Ready to analyze</h3>
               <p className="text-gray-500 max-w-xs mt-2 leading-relaxed">
@@ -179,7 +217,7 @@ function App() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-              {projects.map((p) => (
+              {sortedProjects.map((p) => (
                 <ProjectCard
                   key={p.target_dir}
                   project={p}
@@ -188,9 +226,9 @@ function App() {
                 />
               ))}
               {isScanning && (
-                <div className="p-4 rounded-xl border border-dashed border-gray-300 flex items-center justify-center bg-white/50 animate-pulse">
+                <div className="p-4 rounded-xl border border-dashed border-gray-300 flex items-center justify-center bg-white/50 animate-pulse h-[100px]">
                   <RefreshCcw className="w-5 h-5 text-gray-400 animate-spin mr-3" />
-                  <span className="text-sm font-medium text-gray-400">Searching...</span>
+                  <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">Searching...</span>
                 </div>
               )}
             </div>
@@ -204,22 +242,22 @@ function App() {
           <div className="max-w-5xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Selected</span>
-                <span className="text-sm font-bold text-gray-700">{selectedPaths.size} Projects</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selected</span>
+                <span className="text-sm font-black text-gray-700">{selectedPaths.size} Projects</span>
               </div>
               <div className="h-8 w-px bg-gray-200" />
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-red-400 uppercase tracking-widest">Total Recovery</span>
-                <span className="text-lg font-black text-red-600 tracking-tight">{formatBytes(selectedSize)}</span>
+                <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">Recovery Total</span>
+                <span className="text-2xl font-black text-red-600 tracking-tighter">{formatBytes(selectedSize)}</span>
               </div>
             </div>
             <button 
               disabled={isCleaning}
-              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-8 py-3 rounded-2xl font-black transition-all shadow-lg active:scale-95 shadow-red-200"
+              className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl active:scale-95 shadow-red-100"
               onClick={cleanSelected}
             >
               {isCleaning ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-              {isCleaning ? "Cleaning..." : "CLEAN SELECTED"}
+              {isCleaning ? "TRASHING..." : "MOVE TO TRASH"}
             </button>
           </div>
         </div>

@@ -1,5 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
-
 export interface ProjectInfo {
   name: string;
   path: string;
@@ -7,6 +5,10 @@ export interface ProjectInfo {
   size: number;
   project_type: string;
   last_modified: number;
+  last_commit: number | null;
+  has_remote: boolean;
+  has_unpushed_changes: boolean;
+  is_stale: boolean;
 }
 
 export function formatBytes(bytes: number, decimals = 2) {
