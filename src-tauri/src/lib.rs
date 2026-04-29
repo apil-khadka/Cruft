@@ -1,5 +1,6 @@
 pub mod analyzer;
 pub mod global_cache;
+pub mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -10,6 +11,7 @@ pub fn run() {
             analyzer::start_scan,
             analyzer::delete_target,
             analyzer::reveal_in_explorer,
+            analyzer::open_in_vscode,
             global_cache::scan_global_caches,
             global_cache::prune_global_cache
         ])

@@ -18,7 +18,12 @@ export interface GlobalCacheInfo {
   ecosystem: string;
 }
 
-export function formatBytes(bytes: number, decimals = 2) {
+/** Discriminated union matching the Rust ScanEvent enum (serde tag="kind", content="data"). */
+export type ScanEvent =
+  | { kind: "project"; data: ProjectInfo }
+  | { kind: "done" };
+
+export function formatBytes(bytes: number, decimals = 2): string {
   if (!+bytes) return "0 Bytes";
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;

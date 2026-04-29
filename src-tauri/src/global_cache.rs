@@ -1,7 +1,8 @@
-use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+use crate::utils;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GlobalCacheInfo {
@@ -13,25 +14,29 @@ pub struct GlobalCacheInfo {
 
 #[tauri::command]
 pub async fn scan_global_caches() -> Result<Vec<GlobalCacheInfo>, String> {
-    let paths = get_cache_paths();
-    
-    let mut results: Vec<GlobalCacheInfo> = paths.into_par_iter()
-        .filter(|(_, _, path)| path.exists())
-        .map(|(name, ecosystem, path)| {
-            let size = calculate_dir_size(&path);
-            GlobalCacheInfo {
-                name,
-                path: path.to_string_lossy().to_string(),
-                size,
-                ecosystem,
-            }
-        })
-        .collect();
+    // Offload the CPU/IO-heavy parallel work off the async executor.
+    tauri::async_runtime::spawn_blocking(|| {
+        let paths = get_cache_paths();
 
-    // Add Docker usage
-    results.extend(get_docker_usage());
+        let mut results: Vec<GlobalCacheInfo> = paths
+            .into_par_iter()
+            .filter(|(_, _, path)| path.exists())
+            .map(|(name, ecosystem, path)| {
+                let size = utils::calculate_dir_size(&path);
+                GlobalCacheInfo {
+                    name,
+                    path: path.to_string_lossy().to_string(),
+                    size,
+                    ecosystem,
+                }
+            })
+            .collect();
 
-    Ok(results)
+        results.extend(get_docker_usage());
+        results
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -41,75 +46,169 @@ pub async fn prune_global_cache(path: String) -> Result<(), String> {
             .args(["system", "prune", "-af"])
             .status()
             .map_err(|e| e.to_string())?;
-        
-        if status.success() {
-            return Ok(());
+
+        return if status.success() {
+            Ok(())
         } else {
-            return Err("Docker prune failed".to_string());
-        }
+            Err("Docker prune failed".to_string())
+        };
     }
 
     let path_buf = PathBuf::from(&path);
-    
-    // Safety check: ensure the path is one of our known cache paths
+
     let known_paths = get_cache_paths();
     let is_known = known_paths.iter().any(|(_, _, p)| p == &path_buf);
-    
+
     if !is_known {
         return Err("Safety block: Cannot prune unknown cache path".to_string());
     }
 
     if path_buf.exists() && path_buf.is_dir() {
-        // Moving to trash is safer than permanent deletion.
         match trash::delete(&path_buf) {
             Ok(_) => Ok(()),
-            Err(_) => {
-                // Fallback to permanent deletion if trash fails
-                std::fs::remove_dir_all(&path_buf).map_err(|e| e.to_string())
-            }
+            Err(_) => std::fs::remove_dir_all(&path_buf).map_err(|e| e.to_string()),
         }
     } else {
-        Ok(()) // Already gone
+        Ok(())
     }
 }
 
 pub fn get_cache_paths() -> Vec<(String, String, PathBuf)> {
     let mut paths = Vec::new();
-    let home = dirs::home_dir();
+    let home = match dirs::home_dir() {
+        Some(h) => h,
+        None => return paths,
+    };
 
-    if let Some(home) = home {
-        // Rust
-        paths.push(("Cargo Registry".to_string(), "Rust".to_string(), home.join(".cargo/registry")));
-        paths.push(("Cargo Git".to_string(), "Rust".to_string(), home.join(".cargo/git")));
+    // ── Rust / Cargo ───────────────────────────────────────────────────────────
+    paths.push((
+        "Cargo Registry".to_string(),
+        "Rust".to_string(),
+        home.join(".cargo/registry"),
+    ));
+    paths.push((
+        "Cargo Git".to_string(),
+        "Rust".to_string(),
+        home.join(".cargo/git"),
+    ));
 
-        // Node
-        #[cfg(not(target_os = "windows"))]
-        paths.push(("npm Cache".to_string(), "Node.js".to_string(), home.join(".npm")));
-        
-        #[cfg(target_os = "windows")]
-        if let Some(appdata) = dirs::data_dir() {
-             paths.push(("npm Cache".to_string(), "Node.js".to_string(), appdata.join("npm-cache")));
-        }
+    // ── Node.js / npm ──────────────────────────────────────────────────────────
+    #[cfg(not(target_os = "windows"))]
+    paths.push((
+        "npm Cache".to_string(),
+        "Node.js".to_string(),
+        home.join(".npm"),
+    ));
+
+    #[cfg(target_os = "windows")]
+    if let Some(appdata) = dirs::data_dir() {
+        paths.push((
+            "npm Cache".to_string(),
+            "Node.js".to_string(),
+            appdata.join("npm-cache"),
+        ));
     }
+
+    // ── pnpm ───────────────────────────────────────────────────────────────────
+    #[cfg(target_os = "macos")]
+    {
+        // pnpm v7+ default on macOS
+        paths.push((
+            "pnpm Store".to_string(),
+            "Node.js".to_string(),
+            home.join("Library/pnpm/store"),
+        ));
+        // older pnpm
+        paths.push((
+            "pnpm Store (legacy)".to_string(),
+            "Node.js".to_string(),
+            home.join(".pnpm-store"),
+        ));
+    }
+    #[cfg(target_os = "linux")]
+    {
+        paths.push((
+            "pnpm Store".to_string(),
+            "Node.js".to_string(),
+            home.join(".local/share/pnpm-store"),
+        ));
+        paths.push((
+            "pnpm Store (XDG)".to_string(),
+            "Node.js".to_string(),
+            home.join(".pnpm-store"),
+        ));
+    }
+    #[cfg(target_os = "windows")]
+    if let Some(local) = dirs::data_local_dir() {
+        paths.push((
+            "pnpm Store".to_string(),
+            "Node.js".to_string(),
+            local.join("pnpm/store"),
+        ));
+    }
+
+    // ── Yarn ───────────────────────────────────────────────────────────────────
+    #[cfg(target_os = "macos")]
+    if let Some(cache) = dirs::cache_dir() {
+        paths.push((
+            "Yarn v1 Cache".to_string(),
+            "Node.js".to_string(),
+            cache.join("Yarn"),
+        ));
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        paths.push((
+            "Yarn Cache".to_string(),
+            "Node.js".to_string(),
+            home.join(".yarn/cache"),
+        ));
+        paths.push((
+            "Yarn Berry Cache".to_string(),
+            "Node.js".to_string(),
+            home.join(".cache/yarn"),
+        ));
+    }
+
+    // ── Python / pip ───────────────────────────────────────────────────────────
+    if let Some(cache) = dirs::cache_dir() {
+        paths.push((
+            "pip Cache".to_string(),
+            "Python".to_string(),
+            cache.join("pip"),
+        ));
+    }
+
+    // ── Homebrew (macOS only) ──────────────────────────────────────────────────
+    #[cfg(target_os = "macos")]
+    if let Some(cache) = dirs::cache_dir() {
+        paths.push((
+            "Homebrew Downloads".to_string(),
+            "Homebrew".to_string(),
+            cache.join("Homebrew"),
+        ));
+    }
+
+    // ── Java / Kotlin – Gradle ────────────────────────────────────────────────
+    paths.push((
+        "Gradle Caches".to_string(),
+        "Java/Kotlin".to_string(),
+        home.join(".gradle/caches"),
+    ));
+
+    // ── Java / Kotlin – Maven ─────────────────────────────────────────────────
+    paths.push((
+        "Maven Local Repo".to_string(),
+        "Java/Kotlin".to_string(),
+        home.join(".m2/repository"),
+    ));
 
     paths
 }
 
-pub fn calculate_dir_size(path: &Path) -> u64 {
-    if !path.exists() {
-        return 0;
-    }
-    WalkDir::new(path)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .map(|e| e.metadata().map(|m| m.len()).unwrap_or(0))
-        .sum()
-}
-
 pub fn get_docker_usage() -> Vec<GlobalCacheInfo> {
     let mut results = Vec::new();
-    
+
     let output = std::process::Command::new("docker")
         .args(["system", "df", "--format", "{{json .}}"])
         .output();
@@ -121,7 +220,6 @@ pub fn get_docker_usage() -> Vec<GlobalCacheInfo> {
                 if let Ok(val) = serde_json::from_str::<serde_json::Value>(line) {
                     let type_str = val["Type"].as_str().unwrap_or("Unknown");
                     let size_str = val["Size"].as_str().unwrap_or("0B");
-                    
                     let size = parse_docker_size(size_str);
                     if size > 0 {
                         results.push(GlobalCacheInfo {
@@ -135,21 +233,21 @@ pub fn get_docker_usage() -> Vec<GlobalCacheInfo> {
             }
         }
     }
-    
+
     results
 }
 
 fn parse_docker_size(s: &str) -> u64 {
     let s = s.trim().to_uppercase();
-    if s == "0B" || s.is_empty() { return 0; }
-    
-    // Find where the number ends and unit begins
+    if s == "0B" || s.is_empty() {
+        return 0;
+    }
+
     let unit_start = s.find(|c: char| c.is_alphabetic()).unwrap_or(s.len());
     let (num_part, unit_part) = s.split_at(unit_start);
-    
     let num = num_part.parse::<f64>().unwrap_or(0.0);
-    
-    let multiplier = match unit_part {
+
+    let multiplier: u64 = match unit_part {
         "GB" | "G" => 1024 * 1024 * 1024,
         "MB" | "M" => 1024 * 1024,
         "KB" | "K" => 1024,
