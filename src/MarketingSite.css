@@ -1,0 +1,953 @@
+body:has(.cruft-site) {
+  display: block;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: auto;
+  cursor: auto;
+  user-select: text;
+  background: #f8fafc;
+}
+
+body:has(.cruft-site) #root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.cruft-site {
+  --cruft-ink: #111827;
+  --cruft-copy: #475569;
+  --cruft-muted: #64748b;
+  --cruft-blue: #2563eb;
+  --cruft-blue-dark: #1d4ed8;
+  --cruft-blue-soft: #eff6ff;
+  --cruft-red: #b91c1c;
+  --cruft-red-soft: #fef2f2;
+  --cruft-line: #e2e8f0;
+  --cruft-paper: #f8fafc;
+  --cruft-white: #ffffff;
+  min-height: 100vh;
+  color: var(--cruft-ink);
+  background: var(--cruft-paper);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  cursor: auto;
+  user-select: text;
+}
+
+.cruft-site * {
+  box-sizing: border-box;
+}
+.cruft-site a {
+  color: inherit;
+  text-decoration: none;
+}
+.cruft-site p,
+.cruft-site h1,
+.cruft-site h2,
+.cruft-site h3 {
+  margin: 0;
+}
+
+.cruft-header {
+  height: 72px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid var(--cruft-line);
+}
+
+.cruft-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cruft-ink);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.cruft-brand-mark {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eaf1ff;
+  color: var(--cruft-blue);
+}
+.cruft-nav {
+  display: flex;
+  align-items: center;
+  gap: 27px;
+  color: var(--cruft-copy);
+  font-size: 13px;
+  font-weight: 500;
+}
+.cruft-nav a:not(.cruft-nav-cta):hover,
+.cruft-footer nav a:hover,
+.cruft-terms-links a:hover {
+  color: var(--cruft-blue);
+}
+.cruft-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--cruft-blue);
+  color: white !important;
+  font-weight: 600;
+  transition:
+    background 140ms ease,
+    transform 140ms ease;
+}
+.cruft-nav-cta:hover,
+.cruft-button-primary:hover {
+  background: var(--cruft-blue-dark);
+  transform: translateY(-1px);
+}
+
+.cruft-hero {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 76px 40px 68px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  align-items: center;
+  gap: 54px;
+}
+.cruft-hero-copy {
+  min-width: 0;
+}
+.cruft-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.cruft-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #2563eb;
+}
+.cruft-hero h1 {
+  max-width: 620px;
+  margin-top: 20px;
+  font-size: clamp(44px, 5.3vw, 68px);
+  font-weight: 720;
+  letter-spacing: -0.065em;
+  line-height: 0.99;
+}
+.cruft-hero-copy > p {
+  max-width: 540px;
+  margin-top: 22px;
+  color: var(--cruft-copy);
+  font-size: 16px;
+  line-height: 1.75;
+}
+.cruft-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 29px;
+}
+.cruft-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
+}
+.cruft-button-primary {
+  background: var(--cruft-blue);
+  color: var(--cruft-white) !important;
+}
+.cruft-button-quiet {
+  border-color: var(--cruft-line);
+  background: var(--cruft-white);
+  color: var(--cruft-ink);
+}
+.cruft-button-quiet:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+.cruft-hero-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 21px;
+  margin-top: 24px;
+  color: var(--cruft-muted);
+  font-size: 11px;
+}
+.cruft-hero-notes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.cruft-hero-notes svg {
+  color: var(--cruft-blue);
+}
+
+.cruft-preview-wrap {
+  min-width: 0;
+}
+.cruft-preview-label {
+  margin: 0 0 9px 3px;
+  color: var(--cruft-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.cruft-window {
+  overflow: hidden;
+  border: 1px solid #d7dfeb;
+  border-radius: 12px;
+  background: white;
+  box-shadow:
+    0 25px 60px -40px rgba(15, 23, 42, 0.45),
+    0 5px 15px rgba(15, 23, 42, 0.04);
+}
+.cruft-window-titlebar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 13px;
+  border-bottom: 1px solid #e5eaf1;
+  background: #f8fafc;
+}
+.cruft-window-dots {
+  display: flex;
+  gap: 5px;
+}
+.cruft-window-dots i {
+  width: 7px;
+  height: 7px;
+  display: block;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+.cruft-window-dots i:first-child {
+  background: #f87171;
+}
+.cruft-window-dots i:nth-child(2) {
+  background: #fbbf24;
+}
+.cruft-window-dots i:nth-child(3) {
+  background: #34d399;
+}
+.cruft-window-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-size: 10px;
+  font-weight: 650;
+}
+.cruft-window-title svg {
+  color: var(--cruft-blue);
+}
+.cruft-window-spacer {
+  width: 34px;
+}
+.cruft-window-tabs {
+  display: flex;
+  gap: 22px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e5eaf1;
+}
+.cruft-tab {
+  min-height: 41px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+.cruft-tab-active {
+  border-color: var(--cruft-blue);
+  color: var(--cruft-blue);
+}
+.cruft-window-content {
+  padding: 20px;
+}
+.cruft-window-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cruft-mini-label {
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.cruft-window-heading h2 {
+  margin-top: 6px;
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+.cruft-window-heading p {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 10px;
+}
+.cruft-window-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--cruft-blue);
+  color: white;
+  font-size: 9px;
+  font-weight: 650;
+}
+.cruft-empty-state {
+  min-height: 185px;
+  margin-top: 19px;
+  border: 1px dashed #dbe3ed;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+.cruft-empty-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: var(--cruft-blue);
+}
+.cruft-empty-state strong {
+  margin-top: 12px;
+  color: #1e293b;
+  font-size: 12px;
+}
+.cruft-empty-state > span {
+  max-width: 240px;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.cruft-preview-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 17px;
+  margin-top: 13px;
+  color: #64748b;
+  font-size: 9px;
+}
+.cruft-preview-footer span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cruft-preview-footer svg {
+  color: var(--cruft-blue);
+}
+.cruft-preview-caption {
+  margin: 10px 2px 0;
+  color: var(--cruft-muted);
+  font-size: 9px;
+}
+
+.cruft-proof-strip {
+  display: grid;
+  max-width: 1160px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 auto;
+  padding: 25px 40px 27px;
+  border-top: 1px solid var(--cruft-line);
+  border-bottom: 1px solid var(--cruft-line);
+}
+.cruft-proof-strip > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+.cruft-proof-strip strong {
+  font-size: 12px;
+}
+.cruft-proof-strip span {
+  color: var(--cruft-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.cruft-section {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 83px 40px;
+}
+.cruft-section-intro {
+  max-width: 620px;
+}
+.cruft-section h2,
+.cruft-safety h2,
+.cruft-download h2 {
+  margin-top: 15px;
+  font-size: clamp(30px, 3.3vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 1.08;
+}
+.cruft-section-intro > p,
+.cruft-pricing-copy > p,
+.cruft-privacy > p,
+.cruft-terms > p {
+  max-width: 620px;
+  margin-top: 14px;
+  color: var(--cruft-copy);
+  font-size: 14px;
+  line-height: 1.75;
+}
+.cruft-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin: 37px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cruft-steps li {
+  position: relative;
+  min-width: 0;
+  min-height: 194px;
+  padding: 21px;
+  border: 1px solid var(--cruft-line);
+  border-radius: 10px;
+  background: var(--cruft-white);
+}
+.cruft-steps li > span {
+  position: absolute;
+  top: 21px;
+  right: 21px;
+  color: #94a3b8;
+  font:
+    600 9px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+.cruft-steps li > svg {
+  color: var(--cruft-blue);
+}
+.cruft-steps h3 {
+  margin-top: 21px;
+  font-size: 14px;
+  letter-spacing: -0.025em;
+}
+.cruft-steps p {
+  margin-top: 8px;
+  color: var(--cruft-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.cruft-feature-band {
+  border-top: 1px solid var(--cruft-line);
+  border-bottom: 1px solid var(--cruft-line);
+  background: #f1f5f9;
+}
+.cruft-features {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 70px;
+}
+.cruft-features .cruft-section-intro {
+  max-width: 430px;
+}
+.cruft-features .cruft-section-intro h2 {
+  max-width: 420px;
+}
+.cruft-feature-list {
+  border-top: 1px solid #d5dee8;
+}
+.cruft-feature-list article {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 13px;
+  padding: 18px 0;
+  border-bottom: 1px solid #d5dee8;
+}
+.cruft-feature-list article > svg {
+  margin-top: 1px;
+  color: var(--cruft-blue);
+}
+.cruft-feature-list h3 {
+  font-size: 13px;
+  font-weight: 700;
+}
+.cruft-feature-list p {
+  margin-top: 6px;
+  color: var(--cruft-copy);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.cruft-safety {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(220px, 0.7fr);
+  align-items: start;
+  gap: 20px;
+}
+.cruft-safety-mark {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: var(--cruft-red-soft);
+  color: var(--cruft-red);
+}
+.cruft-eyebrow-danger {
+  color: var(--cruft-red);
+}
+.cruft-safety h2 {
+  max-width: 440px;
+}
+.cruft-safety-copy > p {
+  max-width: 620px;
+  margin-top: 14px;
+  color: var(--cruft-copy);
+  font-size: 12px;
+  line-height: 1.75;
+}
+.cruft-safety-checks {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+  padding-left: 19px;
+  border-left: 1px solid var(--cruft-line);
+}
+.cruft-safety-checks div {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: var(--cruft-copy);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.cruft-safety-checks svg {
+  color: var(--cruft-blue);
+}
+.cruft-safety-checks div:last-child svg {
+  color: var(--cruft-red);
+}
+
+.cruft-download {
+  background: #172033;
+  color: white;
+}
+.cruft-download-inner {
+  max-width: 1160px;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  margin: 0 auto;
+  padding: 54px 40px;
+}
+.cruft-download .cruft-eyebrow {
+  color: #cbd5e1;
+}
+.cruft-download h2 {
+  max-width: 580px;
+}
+.cruft-download p {
+  max-width: 600px;
+  margin-top: 12px;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.cruft-download .cruft-button {
+  flex: 0 0 auto;
+}
+
+.cruft-pricing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.72fr);
+  gap: 55px;
+  border-bottom: 1px solid var(--cruft-line);
+}
+.cruft-pricing-status {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  padding: 22px;
+  border: 1px solid var(--cruft-line);
+  border-radius: 10px;
+  background: white;
+}
+.cruft-status-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--cruft-copy);
+  font-size: 11px;
+}
+.cruft-status-line i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+.cruft-pricing-status > a,
+.cruft-terms-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--cruft-blue);
+  font-size: 11px;
+  font-weight: 650;
+}
+.cruft-pricing-status > a {
+  margin-top: 5px;
+}
+
+.cruft-privacy {
+  padding-bottom: 40px;
+}
+.cruft-privacy > p {
+  max-width: 950px;
+}
+.cruft-terms {
+  padding-top: 42px;
+  padding-bottom: 66px;
+}
+.cruft-terms > p {
+  max-width: 950px;
+}
+.cruft-terms-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 18px;
+}
+.cruft-footer {
+  display: flex;
+  max-width: 1240px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto;
+  padding: 22px 40px;
+  border-top: 1px solid var(--cruft-line);
+}
+.cruft-footer .cruft-brand {
+  font-size: 14px;
+}
+.cruft-footer .cruft-brand-mark {
+  width: 29px;
+  height: 29px;
+}
+.cruft-footer-note {
+  color: var(--cruft-muted);
+  font-size: 9px;
+}
+.cruft-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  color: var(--cruft-copy);
+  font-size: 10px;
+}
+.cruft-footer nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 900px) {
+  .cruft-header {
+    padding: 0 24px;
+  }
+  .cruft-hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 38px;
+    padding: 62px 24px 54px;
+  }
+  .cruft-hero-copy {
+    max-width: 700px;
+  }
+  .cruft-hero h1 {
+    max-width: 670px;
+    font-size: clamp(46px, 8vw, 66px);
+  }
+  .cruft-preview-wrap {
+    max-width: 680px;
+  }
+  .cruft-proof-strip {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+  .cruft-section {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+  .cruft-features {
+    gap: 38px;
+  }
+  .cruft-safety {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+  .cruft-safety-checks {
+    grid-column: 2;
+    padding: 0;
+    border: 0;
+  }
+  .cruft-download-inner {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+  .cruft-pricing {
+    gap: 30px;
+  }
+  .cruft-footer {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+
+@media (max-width: 620px) {
+  .cruft-header {
+    height: auto;
+    min-height: 64px;
+    padding: 11px 16px;
+  }
+  .cruft-brand {
+    gap: 8px;
+    font-size: 15px;
+  }
+  .cruft-brand-mark {
+    width: 31px;
+    height: 31px;
+  }
+  .cruft-nav {
+    gap: 12px;
+    font-size: 11px;
+  }
+  .cruft-nav a:not(.cruft-nav-cta) {
+    display: none;
+  }
+  .cruft-nav-cta {
+    padding: 9px 10px;
+  }
+  .cruft-hero {
+    gap: 32px;
+    padding: 48px 18px 43px;
+  }
+  .cruft-eyebrow {
+    font-size: 9px;
+  }
+  .cruft-hero h1 {
+    margin-top: 16px;
+    font-size: clamp(43px, 12.5vw, 57px);
+  }
+  .cruft-hero-copy > p {
+    margin-top: 17px;
+    font-size: 14px;
+    line-height: 1.72;
+  }
+  .cruft-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+    margin-top: 22px;
+  }
+  .cruft-button {
+    width: 100%;
+  }
+  .cruft-hero-notes {
+    gap: 10px 14px;
+    font-size: 10px;
+  }
+  .cruft-preview-wrap {
+    margin: 0 -2px;
+  }
+  .cruft-window-content {
+    padding: 13px;
+  }
+  .cruft-window-tabs {
+    gap: 14px;
+    padding: 0 13px;
+  }
+  .cruft-tab {
+    gap: 5px;
+    font-size: 9px;
+  }
+  .cruft-window-heading h2 {
+    font-size: 16px;
+  }
+  .cruft-window-heading p {
+    max-width: 180px;
+    font-size: 9px;
+  }
+  .cruft-window-action {
+    padding: 7px 8px;
+    font-size: 8px;
+  }
+  .cruft-empty-state {
+    min-height: 158px;
+  }
+  .cruft-preview-footer {
+    gap: 8px 11px;
+    font-size: 8px;
+  }
+  .cruft-proof-strip {
+    grid-template-columns: 1fr;
+    gap: 17px;
+    padding: 21px 19px;
+  }
+  .cruft-proof-strip > div {
+    display: grid;
+    grid-template-columns: minmax(100px, 0.7fr) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+  }
+  .cruft-proof-strip strong {
+    font-size: 11px;
+  }
+  .cruft-proof-strip span {
+    font-size: 9px;
+  }
+  .cruft-section {
+    padding: 57px 19px;
+  }
+  .cruft-section h2,
+  .cruft-safety h2,
+  .cruft-download h2 {
+    font-size: 31px;
+  }
+  .cruft-section-intro > p,
+  .cruft-pricing-copy > p,
+  .cruft-privacy > p,
+  .cruft-terms > p {
+    font-size: 12px;
+  }
+  .cruft-steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    margin-top: 25px;
+  }
+  .cruft-steps li {
+    min-height: 0;
+    padding: 17px;
+  }
+  .cruft-steps li > span {
+    top: 17px;
+    right: 17px;
+  }
+  .cruft-steps h3 {
+    margin-top: 13px;
+  }
+  .cruft-steps p {
+    max-width: 340px;
+  }
+  .cruft-features {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 25px;
+  }
+  .cruft-safety {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 13px;
+  }
+  .cruft-safety-mark {
+    width: 34px;
+    height: 34px;
+  }
+  .cruft-safety-copy > p {
+    font-size: 11px;
+  }
+  .cruft-safety-checks {
+    grid-column: 2;
+    gap: 10px;
+    margin-top: 3px;
+  }
+  .cruft-download-inner {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 22px;
+    padding: 43px 19px;
+  }
+  .cruft-pricing {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 23px;
+  }
+  .cruft-pricing-status {
+    padding: 18px;
+  }
+  .cruft-privacy {
+    padding-bottom: 29px;
+  }
+  .cruft-terms {
+    padding-top: 30px;
+    padding-bottom: 49px;
+  }
+  .cruft-terms-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .cruft-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+    padding: 19px;
+  }
+  .cruft-footer nav {
+    gap: 9px 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cruft-site *,
+  .cruft-site *::before,
+  .cruft-site *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

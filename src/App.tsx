@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { invoke, Channel } from "@tauri-apps/api/core";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { invoke, Channel, isTauri } from "@tauri-apps/api/core";
 import { open, ask } from "@tauri-apps/plugin-dialog";
 import {
   FolderSearch,
@@ -12,15 +12,11 @@ import {
   LayoutGrid,
   X,
 } from "lucide-react";
-import {
-  ProjectInfo,
-  GlobalCacheInfo,
-  ScanEvent,
-  formatBytes,
-} from "./lib/api";
+import { ProjectInfo, GlobalCacheInfo, ScanEvent, formatBytes } from "./lib/api";
 import { ProjectCard } from "./components/ProjectCard";
 import { SystemCacheCard } from "./components/SystemCacheCard";
 import { WindowControls } from "./components/WindowControls";
+import { MarketingSite } from "./MarketingSite";
 import "./App.css";
 
 type SortMode = "size" | "activity" | "stale";
@@ -32,7 +28,7 @@ interface Toast {
   type: "error" | "info";
 }
 
-function App() {
+function DesktopApp() {
   const [activeTab, setActiveTab] = useState<Tab>("projects");
   const [projects, setProjects] = useState<ProjectInfo[]>([]);
   const [globalCaches, setGlobalCaches] = useState<GlobalCacheInfo[]>([]);
@@ -43,26 +39,17 @@ function App() {
   const [sortMode, setSortMode] = useState<SortMode>("size");
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (message: string, type: Toast["type"] = "error") => {
+  const showToast = useCallback((message: string, type: Toast["type"] = "error") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(
-      () => setToasts((prev) => prev.filter((t) => t.id !== id)),
-      5000,
-    );
-  };
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 5000);
+  }, []);
 
   const dismissToast = (id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  useEffect(() => {
-    if (activeTab === "caches") {
-      scanCaches();
-    }
-  }, [activeTab]);
-
-  const scanCaches = async () => {
+  const scanCaches = useCallback(async () => {
     setIsScanningCaches(true);
     try {
       const results = await invoke<GlobalCacheInfo[]>("scan_global_caches");
@@ -72,7 +59,13 @@ function App() {
     } finally {
       setIsScanningCaches(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    if (activeTab === "caches") {
+      scanCaches();
+    }
+  }, [activeTab, scanCaches]);
 
   const pruneCache = async (path: string) => {
     const cache = globalCaches.find((c) => c.path === path);
@@ -85,7 +78,7 @@ function App() {
         kind: "warning",
         okLabel: "Prune Cache",
         cancelLabel: "Cancel",
-      },
+      }
     );
 
     if (confirmed) {
@@ -118,22 +111,17 @@ function App() {
     }
   }, [projects, sortMode]);
 
-  const totalSize = useMemo(
-    () => projects.reduce((acc, p) => acc + p.size, 0),
-    [projects],
-  );
+  const totalSize = useMemo(() => projects.reduce((acc, p) => acc + p.size, 0), [projects]);
 
   const selectedSize = useMemo(
     () =>
-      projects
-        .filter((p) => selectedPaths.has(p.target_dir))
-        .reduce((acc, p) => acc + p.size, 0),
-    [projects, selectedPaths],
+      projects.filter((p) => selectedPaths.has(p.target_dir)).reduce((acc, p) => acc + p.size, 0),
+    [projects, selectedPaths]
   );
 
   const maxCacheSize = useMemo(
     () => Math.max(...globalCaches.map((c) => c.size), 0),
-    [globalCaches],
+    [globalCaches]
   );
 
   const toggleSelect = (path: string) => {
@@ -196,7 +184,7 @@ function App() {
         kind: "warning",
         okLabel: "Move to Trash",
         cancelLabel: "Cancel",
-      },
+      }
     );
 
     if (!confirmed) return;
@@ -295,7 +283,7 @@ function App() {
                 {formatBytes(
                   activeTab === "projects"
                     ? totalSize
-                    : globalCaches.reduce((acc, c) => acc + c.size, 0),
+                    : globalCaches.reduce((acc, c) => acc + c.size, 0)
                 )}
               </p>
             </div>
@@ -318,9 +306,7 @@ function App() {
                 disabled={isScanningCaches || isCleaning}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 shadow-blue-100"
               >
-                <RefreshCcw
-                  className={`w-4 h-4 ${isScanningCaches ? "animate-spin" : ""}`}
-                />
+                <RefreshCcw className={`w-4 h-4 ${isScanningCaches ? "animate-spin" : ""}`} />
                 Refresh Caches
               </button>
             )}
@@ -342,9 +328,7 @@ function App() {
                 ) : (
                   <Square className="w-4 h-4" />
                 )}
-                {selectedPaths.size === projects.length
-                  ? "Deselect All"
-                  : "Select All"}
+                {selectedPaths.size === projects.length ? "Deselect All" : "Select All"}
               </button>
 
               <div className="h-4 w-px bg-gray-300" />
@@ -381,12 +365,9 @@ function App() {
                 <div className="w-20 h-20 bg-white border-2 border-dashed border-gray-200 rounded-3xl flex items-center justify-center mb-6">
                   <FolderSearch className="w-10 h-10 text-gray-200" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">
-                  Ready to analyze
-                </h3>
+                <h3 className="text-xl font-bold text-gray-900">Ready to analyze</h3>
                 <p className="text-gray-500 max-w-xs mt-2 leading-relaxed">
-                  Select your development folder to find space-hogging
-                  dependency directories.
+                  Select your development folder to find space-hogging dependency directories.
                 </p>
                 <button
                   onClick={startScan}
@@ -485,9 +466,7 @@ function App() {
           <div
             key={toast.id}
             className={`flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-              toast.type === "error"
-                ? "bg-red-600 text-white"
-                : "bg-gray-900 text-white"
+              toast.type === "error" ? "bg-red-600 text-white" : "bg-gray-900 text-white"
             }`}
           >
             <span className="flex-1">{toast.message}</span>
@@ -502,6 +481,12 @@ function App() {
       </div>
     </div>
   );
+}
+
+function App() {
+  // The Tauri binary continues to open the existing local utility. In a normal
+  // browser, the root URL is the public product site.
+  return isTauri() ? <DesktopApp /> : <MarketingSite />;
 }
 
 export default App;

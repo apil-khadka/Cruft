@@ -1,0 +1,13 @@
+# Build output
+dist
+src-tauri/target
+
+# Dependencies
+node_modules
+
+# Lock files (do not reformat these)
+pnpm-lock.yaml
+Cargo.lock
+
+# Generated files
+src-tauri/gen

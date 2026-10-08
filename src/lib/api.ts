@@ -19,9 +19,7 @@ export interface GlobalCacheInfo {
 }
 
 /** Discriminated union matching the Rust ScanEvent enum (serde tag="kind", content="data"). */
-export type ScanEvent =
-  | { kind: "project"; data: ProjectInfo }
-  | { kind: "done" };
+export type ScanEvent = { kind: "project"; data: ProjectInfo } | { kind: "done" };
 
 export function formatBytes(bytes: number, decimals = 2): string {
   if (!+bytes) return "0 Bytes";

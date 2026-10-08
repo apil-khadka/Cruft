@@ -1,8 +1,16 @@
 import React from "react";
 import { ProjectInfo, formatBytes } from "../lib/api";
-import { 
-  Trash2, FolderOpen, Box, Hash, Terminal, 
-  ExternalLink, Code, Clock, CloudOff, AlertCircle 
+import {
+  Trash2,
+  FolderOpen,
+  Box,
+  Hash,
+  Terminal,
+  ExternalLink,
+  Code,
+  Clock,
+  CloudOff,
+  AlertCircle,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -84,18 +92,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 </span>
               )}
             </h3>
-            <p
-              className="text-xs text-gray-500 truncate max-w-[180px]"
-              title={project.path}
-            >
+            <p className="text-xs text-gray-500 truncate max-w-[180px]" title={project.path}>
               {project.path}
             </p>
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <span className={`text-lg font-bold ${sizeColor}`}>
-            {formatBytes(project.size)}
-          </span>
+          <span className={`text-lg font-bold ${sizeColor}`}>{formatBytes(project.size)}</span>
           {project.last_commit ? (
             <p className="text-[10px] text-gray-400 mt-1 flex items-center justify-end gap-1">
               <Clock className="w-3 h-3" />
@@ -150,8 +153,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </button>
           <span className="text-xs text-gray-500 flex items-center gap-1">
             <Trash2 className="w-3 h-3" />{" "}
-            {project.target_dir.split("/").pop() ||
-              project.target_dir.split("\\").pop()}
+            {project.target_dir.split("/").pop() || project.target_dir.split("\\").pop()}
           </span>
         </div>
       </div>

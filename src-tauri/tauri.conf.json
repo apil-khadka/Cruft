@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "project-analyzer",
+  "productName": "Cruft",
   "version": "0.1.0",
   "identifier": "com.project-analyzer.app",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Project Analyzer",
+        "title": "Cruft",
         "width": 1000,
         "height": 700,
         "decorations": false

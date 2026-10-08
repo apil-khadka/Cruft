@@ -9,14 +9,8 @@ interface SystemCacheCardProps {
   maxSize: number;
 }
 
-export function SystemCacheCard({
-  cache,
-  onPrune,
-  isPruning,
-  maxSize,
-}: SystemCacheCardProps) {
-  const barWidth =
-    maxSize > 0 ? Math.min((cache.size / maxSize) * 100, 100) : 0;
+export function SystemCacheCard({ cache, onPrune, isPruning, maxSize }: SystemCacheCardProps) {
+  const barWidth = maxSize > 0 ? Math.min((cache.size / maxSize) * 100, 100) : 0;
 
   return (
     <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">

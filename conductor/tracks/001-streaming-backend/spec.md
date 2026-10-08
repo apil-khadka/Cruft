@@ -1,9 +1,11 @@
 # Specification: Rust Streaming Backend
 
 ## Goal
+
 Implement a high-performance, parallel file system scanner in Rust that streams results back to the Tauri frontend using Channels.
 
 ## Requirements
+
 - Use `jwalk` for parallel directory traversal.
 - Detect signature folders: `node_modules`, `target`, `vendor`, `.venv`, `venv`, `dist`, `.next`, `.nuxt`.
 - Stream `ProjectInfo` structs (name, path, target_dir, size, project_type) via `tauri::ipc::Channel`.
@@ -11,6 +13,7 @@ Implement a high-performance, parallel file system scanner in Rust that streams 
 - Handle Windows-specific metadata for file sizes and modification times.
 
 ## Data Structures
+
 ```rust
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProjectInfo {
