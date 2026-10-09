@@ -24,7 +24,13 @@
 
 ## Download
 
-The tag workflow is configured to build installers for these platforms as a draft GitHub release. The release owner must review and publish the draft before users can download it. Each platform job attaches a SHA-256 manifest; compare a downloaded file with its manifest before installation.
+The tag workflow is configured to build installers for these platforms as a draft GitHub release. The release owner must review and publish the draft before users can download it. Each platform job attaches a SHA-256 manifest and verifies it against the built artifacts. After downloading an installer and its platform manifest into one folder, run the checker from a Cruft source checkout with Node.js 22 or later:
+
+```sh
+node scripts/verify-release-checksums.mjs SHA256SUMS-macos-universal.txt . Cruft_universal.dmg
+```
+
+Use the manifest for your platform and replace the installer name with the exact downloaded filename. The checker supports macOS, Windows and Linux; a successful `OK` line means the local file matches the manifest.
 
 | Platform                                         | Installer            |
 | ------------------------------------------------ | -------------------- |
@@ -200,4 +206,5 @@ Pull requests are welcome! Please:
 
 ## License
 
-[MIT](LICENSE)
+No license has been selected for public redistribution yet. The license decision and
+license text are pending; do not treat this checkout as MIT-licensed.

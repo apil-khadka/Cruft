@@ -106,6 +106,9 @@ jobs:
       - name: Generate installer checksums
         run: node scripts/write-release-checksums.mjs ${{ matrix.checksum-label }}
 
+      - name: Verify installer checksums
+        run: node scripts/verify-release-checksums.mjs "SHA256SUMS-${{ matrix.checksum-label }}.txt" src-tauri/target
+
       - name: Upload checksum manifest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
