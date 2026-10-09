@@ -13,7 +13,7 @@
 |     | Feature                                                                                                                               |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | 🔍  | **Recursive scanning** — parallelised (`jwalk`) traversal finds `node_modules`, `target`, `vendor`, `.venv`, `dist`, `.next`, `.nuxt` |
-| 🧹  | **Safe deletion** — moves to Trash first; permanent delete only as a fallback                                                         |
+| 🧹  | **Safe deletion** — moves to Trash and aborts if the Trash operation fails                                                            |
 | 🔒  | **Safety guards** — deletion is blocked unless the directory name is in the known TARGETS allowlist                                   |
 | 📡  | **Real-time streaming** — results appear live as the scanner runs, via Tauri 2.0 IPC channels                                         |
 | 🔀  | **Git intelligence** — detects stale repos (90-day threshold), missing remotes, and truly unpushed commits                            |
@@ -102,16 +102,16 @@ cruft/
 
 ### Tech stack
 
-| Layer                | Technology                               |
-| -------------------- | ---------------------------------------- |
-| Frontend             | React 18 + TypeScript + Vite 6           |
-| Styling              | Tailwind CSS 3                           |
-| Icons                | lucide-react                             |
-| Desktop shell        | Tauri 2.0                                |
-| File traversal       | `jwalk` (parallelised, rayon-backed)     |
-| Git metadata         | `git2`                                   |
-| Deletion             | `trash` crate (system Trash integration) |
-| Cross-platform paths | `dirs` crate                             |
+| Layer                | Technology                                                      |
+| -------------------- | --------------------------------------------------------------- |
+| Frontend             | React 18 + TypeScript + Vite 6                                  |
+| Styling              | Tailwind CSS 3                                                  |
+| Icons                | lucide-react                                                    |
+| Desktop shell        | Tauri 2.0                                                       |
+| File traversal       | `jwalk` (parallelised, rayon-backed)                            |
+| Git metadata         | `git2`                                                          |
+| Deletion             | `trash` crate (system Trash integration; aborts if Trash fails) |
+| Cross-platform paths | `dirs` crate                                                    |
 
 ---
 

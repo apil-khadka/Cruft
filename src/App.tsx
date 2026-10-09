@@ -71,8 +71,11 @@ function DesktopApp() {
     const cache = globalCaches.find((c) => c.path === path);
     if (!cache) return;
 
+    const dockerCleanup = cache.path === "docker://system";
     const confirmed = await ask(
-      `Are you sure you want to prune the ${cache.name}? This will remove ${formatBytes(cache.size)} of cached data.`,
+      dockerCleanup
+        ? `This runs "docker system prune -af". It removes all stopped containers, unused networks, all images not used by a container, and unused build cache. It does not remove volumes. Docker may reclaim about ${formatBytes(cache.size)}. Continue?`
+        : `Move the ${cache.name} folder (${formatBytes(cache.size)}) to Trash? If the Trash operation fails, cleanup will stop and the folder will stay in place.`,
       {
         title: "Prune Global Cache",
         kind: "warning",
@@ -84,7 +87,8 @@ function DesktopApp() {
     if (confirmed) {
       setIsCleaning(true);
       try {
-        await invoke("prune_global_cache", { path });
+        const result = await invoke<string>("prune_global_cache", { path });
+        if (dockerCleanup) showToast(result);
         await scanCaches();
       } catch (err) {
         showToast(`Failed to prune cache: ${err}`);

@@ -225,9 +225,9 @@ export function MarketingSite() {
             <h2>Cleanup can permanently remove files.</h2>
             <p>
               Project target removal is limited to known directory names and requires confirmation.
-              The app tries the operating system Trash first; if that fails, its current
-              implementation falls back to permanent deletion. Docker cache cleanup uses Docker’s
-              system-prune command, not the Trash.
+              The app moves files to the operating system Trash and stops if that operation fails.
+              Docker cleanup uses Docker’s system-prune command, not the Trash, and describes the
+              removal scope in its confirmation prompt.
             </p>
             <p>
               Review selected paths and the confirmation prompt before proceeding. Keep backups of
@@ -241,11 +241,11 @@ export function MarketingSite() {
             </div>
             <div>
               <Trash2 size={16} />
-              <span>Trash first where the OS operation succeeds</span>
+              <span>Trash deletion aborts safely when the OS operation fails</span>
             </div>
             <div>
               <TriangleAlert size={16} />
-              <span>Permanent-delete fallback and Docker prune are documented</span>
+              <span>Docker cleanup scope is disclosed before confirmation</span>
             </div>
           </div>
         </section>
@@ -315,9 +315,9 @@ export function MarketingSite() {
           <h2>Keep the cleanup decision yours.</h2>
           <p>
             Cruft reports local candidates; it does not decide which folders are safe for your work.
-            Check paths and repository state first. Project target deletion may become permanent if
+            Check paths and repository state first. Project targets and caches remain in place if
             Trash is unavailable. Cache cleanup can remove tool-managed data, and Docker prune has
-            its own system-wide scope.
+            its own system-wide scope that is shown before confirmation.
           </p>
           <div className="cruft-terms-links">
             <a href={`${repository}/issues`} target="_blank" rel="noreferrer">

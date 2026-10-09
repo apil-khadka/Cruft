@@ -40,17 +40,33 @@ pub async fn scan_global_caches() -> Result<Vec<GlobalCacheInfo>, String> {
 }
 
 #[tauri::command]
-pub async fn prune_global_cache(path: String) -> Result<(), String> {
+pub async fn prune_global_cache(path: String) -> Result<String, String> {
     if path == "docker://system" {
-        let status = std::process::Command::new("docker")
+        let output = std::process::Command::new("docker")
             .args(["system", "prune", "-af"])
-            .status()
+            .output()
             .map_err(|e| e.to_string())?;
 
-        return if status.success() {
-            Ok(())
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let details = [stdout, stderr]
+            .into_iter()
+            .filter(|text| !text.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        return if output.status.success() {
+            Ok(if details.is_empty() {
+                "Docker cleanup completed with no output.".to_string()
+            } else {
+                details
+            })
         } else {
-            Err("Docker prune failed".to_string())
+            Err(if details.is_empty() {
+                format!("Docker cleanup failed with status {}.", output.status)
+            } else {
+                format!("Docker cleanup failed: {details}")
+            })
         };
     }
 
@@ -65,11 +81,15 @@ pub async fn prune_global_cache(path: String) -> Result<(), String> {
 
     if path_buf.exists() && path_buf.is_dir() {
         match trash::delete(&path_buf) {
-            Ok(_) => Ok(()),
-            Err(_) => std::fs::remove_dir_all(&path_buf).map_err(|e| e.to_string()),
+            Ok(_) => Ok("Cache moved to Trash.".to_string()),
+            Err(e) => Err(format!(
+                "Could not move '{}' to Trash; nothing was permanently deleted: {}",
+                path_buf.display(),
+                e
+            )),
         }
     } else {
-        Ok(())
+        Ok("Cache directory was already absent.".to_string())
     }
 }
 

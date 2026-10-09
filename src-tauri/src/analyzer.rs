@@ -256,10 +256,11 @@ pub async fn delete_target(path: String) -> Result<(), String> {
     if path_buf.exists() && path_buf.is_dir() {
         match trash::delete(&path_buf) {
             Ok(_) => Ok(()),
-            Err(e) => {
-                eprintln!("Trash failed: {}. Falling back to permanent delete.", e);
-                fs::remove_dir_all(&path_buf).map_err(|e| e.to_string())
-            }
+            Err(e) => Err(format!(
+                "Could not move '{}' to Trash; nothing was permanently deleted: {}",
+                path_buf.display(),
+                e
+            )),
         }
     } else {
         Err("Path does not exist or is not a directory".to_string())
