@@ -2,9 +2,8 @@
 
 > A lightning-fast developer tool to identify and safely reclaim disk space taken up by dependency directories and system caches.
 
-[![CI](https://github.com/YOUR_ORG/cruft/actions/workflows/build.yml/badge.svg)](https://github.com/YOUR_ORG/cruft/actions/workflows/build.yml)
-[![Latest Release](https://img.shields.io/github/v/release/YOUR_ORG/cruft)](https://github.com/YOUR_ORG/cruft/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/apil-khadka/Cruft/actions/workflows/build.yml/badge.svg)](https://github.com/apil-khadka/Cruft/actions/workflows/build.yml)
+[![Latest Release](https://img.shields.io/github/v/release/apil-khadka/Cruft)](https://github.com/apil-khadka/Cruft/releases/latest)
 
 ---
 
@@ -25,13 +24,15 @@
 
 ## Download
 
-Pre-built installers for every platform are on the [Releases](../../releases) page.
+The tag workflow is configured to build installers for these platforms as a draft GitHub release. The release owner must review and publish the draft before users can download it. Each platform job attaches a SHA-256 manifest; compare a downloaded file with its manifest before installation.
 
 | Platform                                         | Installer            |
 | ------------------------------------------------ | -------------------- |
 | macOS (Apple Silicon + Intel — Universal Binary) | `.dmg`               |
 | Windows                                          | `.msi` + NSIS `.exe` |
 | Linux                                            | `.deb` + `.AppImage` |
+
+macOS notarization and Windows signing require repository secrets and are not configured by this checkout. Unsigned installers may trigger operating-system security prompts. Updates are manual downloads from the Releases page; the app has no automatic updater.
 
 ---
 
@@ -60,8 +61,8 @@ sudo apt-get install -y \
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_ORG/cruft.git
-cd cruft
+git clone https://github.com/apil-khadka/Cruft.git
+cd Cruft
 
 # 2. Install JS dependencies + initialise Husky git hooks
 pnpm install
@@ -73,7 +74,7 @@ pnpm tauri dev
 ### Project structure
 
 ```
-cruft/
+Cruft/
 ├── src/                        # React + TypeScript frontend
 │   ├── components/
 │   │   ├── ProjectCard.tsx     # Individual project result card
@@ -95,7 +96,8 @@ cruft/
 │   ├── build.yml               # CI — lint + build on every push/PR
 │   └── release.yml             # Release — builds installers on vX.Y.Z tag push
 ├── scripts/
-│   └── sync-version.mjs        # Keeps package.json / Cargo.toml / tauri.conf.json in sync
+│   ├── sync-version.mjs        # Keeps package.json / Cargo.toml / tauri.conf.json in sync
+│   └── write-release-checksums.mjs # Creates the platform SHA-256 manifest
 ├── conductor/                  # Project planning docs
 └── CHANGELOG.md
 ```
@@ -179,14 +181,9 @@ To produce notarized macOS and signed Windows binaries, add the following secret
 | `APPLE_PASSWORD`             | App-specific password for the Apple ID                                 |
 | `APPLE_TEAM_ID`              | 10-character Apple Team ID                                             |
 
-**Windows signing** — self-signed certificate (avoids SmartScreen warning):
-
-| Secret                               | Description                |
-| ------------------------------------ | -------------------------- |
-| `TAURI_SIGNING_PRIVATE_KEY`          | Base64-encoded private key |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Key password               |
-
-Then uncomment the relevant blocks in `.github/workflows/release.yml`.
+Windows Authenticode signing is not configured. Tauri updater-signing keys do
+not sign installers or remove SmartScreen warnings; this app currently has no
+automatic updater.
 
 ---
 

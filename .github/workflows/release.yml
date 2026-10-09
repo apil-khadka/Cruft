@@ -17,16 +17,19 @@ jobs:
         include:
           - name: macOS (Universal)
             platform: macos-latest
+            checksum-label: macos-universal
             rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
             tauri-args: --target universal-apple-darwin
 
           - name: Linux
             platform: ubuntu-22.04
+            checksum-label: linux
             rust-targets: ""
             tauri-args: ""
 
           - name: Windows
             platform: windows-latest
+            checksum-label: windows
             rust-targets: ""
             tauri-args: ""
 
@@ -81,9 +84,6 @@ jobs:
           # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           #
-          # ── Windows code signing (optional) ───────────────────────────────
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Cruft ${{ github.ref_name }}"
@@ -102,3 +102,11 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.tauri-args }}
+
+      - name: Generate installer checksums
+        run: node scripts/write-release-checksums.mjs ${{ matrix.checksum-label }}
+
+      - name: Upload checksum manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.ref_name }}" "SHA256SUMS-${{ matrix.checksum-label }}.txt" --clobber
